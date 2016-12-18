@@ -4,7 +4,7 @@
 //#include <ctime>
 #include <math.h>
 #include <string.h>
-#include <conio.h>
+
 
 #define NR_END 1
 #define num_in_pop 30			/* Number in the population  */
@@ -40,7 +40,7 @@ double **matrix(long nrl, long nrh, long ncl, long nch)
 /****************************************/
 
 
-long float calculate_fitness(int count_pop, double **pop_mem)
+float calculate_fitness(int count_pop, double **pop_mem)
 {
 
 	double y = 0;
@@ -175,7 +175,6 @@ main()
 		printf("\nGeneration no %d best fitness is %.12lf. \n\n", count_generations, fitness[0]);
 		fflush(stdout);
 		printf("\nPress any to calculatate next generation: ");
-		//getch();
 		scanf(" %i",&temint);
 		
 
