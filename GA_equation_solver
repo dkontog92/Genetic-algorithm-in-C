@@ -1,0 +1,293 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+//#include <ctime>
+#include <math.h>
+#include <string.h>
+#include <conio.h>
+
+#define NR_END 1
+#define num_in_pop 30			/* Number in the population  */
+#define	num_of_genes 2			/* Number of genes in each chromosome  */
+#define num_of_generations 500  /* Number of generations (if huge leaves running until satisfactory) */
+#define prob_of_cross 80		/* Percentage crossover is probablility of performing crossover*/
+#define num_of_offspring 28		/* Number of offspring to reproduce at each generation, the rest  */
+#define UPPER_LIMIT 100
+#define LOWER_LIMIT -100
+//#define PI 3.14159265358979323846
+
+
+/* The following simply allocates memory for the population matrix */
+/**************************/
+double **matrix(long nrl, long nrh, long ncl, long nch)
+{
+	long i, nrow = nrh - nrl + 1, ncol = nch - ncl + 1;
+	double **m;
+
+	m = (double **)malloc((size_t)((nrow + NR_END)*sizeof(double*)));
+	if (!m) printf("allocation failure 1 in matrix()");
+	m += NR_END;
+	m -= nrl;
+
+	m[nrl] = (double *)malloc((size_t)((nrow*ncol + NR_END)*sizeof(double)));
+	if (!m[nrl]) printf("allocation failure 2 in matrix()");
+	m[nrl] += NR_END;
+	m[nrl] -= ncl;
+
+	for (i = nrl + 1; i <= nrh; i++) m[i] = m[i - 1] + ncol;
+	return m;
+}
+/****************************************/
+
+
+long float calculate_fitness(int count_pop, double **pop_mem)
+{
+
+	double y = 0;
+	double x1 = 0, x2 = 0;
+
+	x1 = pop_mem[count_pop][0];
+	x2 = pop_mem[count_pop][1];
+
+	double fitness = 0;
+
+
+	// y = pow((1 - pop_mem[count_pop][0]), 2) + 100 * pow(pop_mem[count_pop][1] - pow(pop_mem[count_pop][0], 2), 2);             //Solution (1,1)
+	//y = pow(1.5 - x1 + x1 * x2, 2) + pow(2.25 - x1 + x1*pow(x2, 2), 2) + pow(2.625 - x1 + x1*pow(x2, 3), 2);					  //Solution (3,0.5)
+	y = pow(x1 + 2 * x2 - 7, 2) + pow(2 * x1 + x2 - 5, 2);														//Solution (1,3)
+	//y = 100 * sqrt(abs(x2 - 0.01*pow(x1, 2))) + 0.01*abs(x1 + 10);					//Solution (-10,1)
+
+	fitness = fabs(y);
+
+	printf("\nFitness: %f\n", fitness);
+
+	return fitness;
+}
+
+
+main()
+{
+	//	FILE *fdata;
+	double **pop_mem;
+	double baby_mem[500][50];
+	double new_offspring;
+	double fitness[1000];
+		
+	int count_pop;
+	int count_genes;
+	int count_generations;
+	int random_int;
+	float random_float;
+	int si, sj, gap;
+	double tmp2, max, min;
+	double tmp = 0;
+	int offset, parent1, parent2, temint;
+	int count2 = 0;
+	int parent2_2nd[num_in_pop], parent1_2nd[num_in_pop];
+	int mutate_bool = 0;
+
+	srand((unsigned)time(0));
+
+	printf("This compiler can generate random numbers from 0 to %d\n", RAND_MAX);
+
+
+
+	pop_mem = matrix(0, num_in_pop + 1, 0, num_of_genes + 1);
+
+
+	/* produce initial population */
+	for (count_pop = 0; count_pop<num_in_pop; count_pop++)
+	{
+		for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+		{
+			/* the following produces a random number between 0 and UPPER_LIMIT */
+			//random_float = (float)(rand() / ((float)RAND_MAX / UPPER_LIMIT));
+
+			random_float = LOWER_LIMIT + (float)rand() / ((float)RAND_MAX / (UPPER_LIMIT - LOWER_LIMIT));
+
+			pop_mem[count_pop][count_genes] = random_float;
+		}
+		fitness[count_pop] = calculate_fitness(count_pop, pop_mem);
+	}
+
+
+	//Print inicial Population
+
+	printf("\n\n ---------Initial Population-----------\n\n");
+	for (count_pop = 0; count_pop<num_in_pop; count_pop++)
+	{
+		for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+		{
+
+			printf("%f\t", pop_mem[count_pop][count_genes]);
+
+		}
+		printf("\t\t%lf ", fitness[count_pop]);
+		printf("\n");
+	}
+
+
+	/* start the loop through generations */
+	for (count_generations = 0; count_generations<num_of_generations; count_generations++)
+	{
+
+		/* put population members in order of fitness */
+		for (gap = (num_in_pop) / 2; gap > 0; gap /= 2)
+		for (si = gap; si < num_in_pop; si++)
+		for (sj = si - gap; sj >= 0 && fitness[sj]>fitness[sj + gap]; sj -= gap)
+		{
+			tmp = fitness[sj];
+			fitness[sj] = fitness[sj + gap];
+			fitness[sj + gap] = tmp;
+			for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+			{
+				tmp2 = pop_mem[sj][count_genes];
+				pop_mem[sj][count_genes] = pop_mem[sj + gap][count_genes];
+				pop_mem[sj + gap][count_genes] = tmp2;
+			}
+
+		}
+
+
+		//Print sorted population
+
+		printf("\n\n\n---------Generation %i sorted by fitness--------\n", count_generations);
+
+		printf("\n\n\t     Gene 1\t Gene 2\t\t\t Fitness\n\n");
+
+		for (count_pop = 0; count_pop<num_in_pop; count_pop++)
+		{
+			printf("Member %02d: ", count_pop);
+			for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+			{
+
+				printf("%.6f\t", pop_mem[count_pop][count_genes]);
+				fflush(stdout);
+
+			}
+			printf("\t%f ", fitness[count_pop]);
+			printf("\n");
+		}
+
+
+
+
+		printf("\nGeneration no %d best fitness is %.12lf. \n\n", count_generations, fitness[0]);
+		fflush(stdout);
+		printf("\nPress any to calculatate next generation: ");
+		//getch();
+		scanf(" %i",&temint);
+		
+
+		/* produce offsprings */
+		for (count_pop = 0; count_pop<num_of_offspring; count_pop++)
+		{
+			
+			parent1 = 0;
+			parent2 = 0;
+			do
+			{
+				parent1 = rand() / (RAND_MAX / 2); //Chooses as first parent 1 of the first 3 with best fitness from previous generation
+				if (mutate_bool == 1)
+					parent2 = count_pop-1;  //Parent from previous mutation
+				else
+					parent2 = rand() / (RAND_MAX / num_in_pop);//Second parent is random from the whole previous generation
+			} while (parent2 == parent1); //Choose 2 different parents
+
+			mutate_bool = 0;
+			parent1_2nd[count_pop] = parent1;
+			parent2_2nd[count_pop] = parent2;
+			/* crossover if random number less than prob_of_cross  */
+			for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+			{
+				/* choose parent members */
+				random_int = 0;
+				max = 0;
+				min = 0;
+				
+				random_int = rand() % 100 + 1;
+				if (random_int< prob_of_cross)
+				{
+
+					/* The following put largest parent in "max" and smallest in "min" */
+					if (pop_mem[parent1][count_genes] >= pop_mem[parent2][count_genes])
+					{
+						max = pop_mem[parent1][count_genes]; 
+						min = pop_mem[parent2][count_genes];
+					}
+					else
+					{
+						max = pop_mem[parent2][count_genes]; 
+						min = pop_mem[parent1][count_genes];
+					}
+
+					/* The following chooses random value between max and min for baby member */
+					new_offspring = min + (float)rand() / ((float)RAND_MAX / (max - min));
+				//	if (new_offspring < 0)																		// ONLY POSITIVE
+					//{
+				//		new_offspring = 0.0;
+				//	}
+					baby_mem[count_pop][count_genes] = new_offspring;
+
+				}
+				else 
+				{  //If no cross-over, mutate 
+					
+					mutate_bool = 1;
+					random_int = 0;
+
+					random_int = rand() % 100 + 1; //Either add or subtract 0.2 (50 percent chance)
+					if (random_int >= 61)
+						baby_mem[count_pop][count_genes] = pop_mem[count_pop][count_genes] / 2;  //Mutate: subtract current value div by 1.21
+					else if ((random_int >= 31 && random_int <= 60) && (pop_mem[count_pop][count_genes] * 2 < UPPER_LIMIT))
+						baby_mem[count_pop][count_genes] = pop_mem[count_pop][count_genes] * 2;
+					else if ((random_int >= 11 && random_int <= 30) && (pop_mem[count_pop][count_genes] - 0.5 > LOWER_LIMIT))
+						baby_mem[count_pop][count_genes] = pop_mem[count_pop][count_genes] - 0.5;
+					else
+						baby_mem[count_pop][count_genes] = LOWER_LIMIT + (float)rand() / ((float)RAND_MAX / (UPPER_LIMIT - LOWER_LIMIT));
+				}
+					//baby_mem[count_pop][count_genes] = pop_mem[parent1][count_genes];
+			}
+
+		}
+
+		mutate_bool = 0; //Important for next generation 
+
+		offset = num_in_pop - num_of_offspring; //If offset greater than 0, then the best fit members of current generation remain in the next generation
+		for (count_pop = 0; count_pop < num_of_offspring; count_pop++)
+		{
+			printf("\nCrossover with parent members: %02d and %02d produce genes: ", parent1_2nd[count_pop], parent2_2nd[count_pop]);
+			for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+			{
+				pop_mem[count_pop + offset][count_genes] = baby_mem[count_pop][count_genes];
+				printf("%f  ", baby_mem[count_pop][count_genes]);
+			}
+			fitness[count_pop + offset] = calculate_fitness(count_pop + offset, pop_mem);
+			printf("\tFitness: %f", fitness[count_pop + offset]);
+
+		}
+
+	} /* end of loop through generations */
+
+
+
+	/* put population members in order of fitness */
+	for (gap = (num_in_pop) / 2; gap > 0; gap /= 2)
+	for (si = gap; si < num_in_pop; si++)
+	for (sj = si - gap; sj >= 0 && fitness[sj]<fitness[sj + gap]; sj -= gap)
+	{
+		tmp = fitness[sj];
+		fitness[sj] = fitness[sj + gap];
+		fitness[sj + gap] = tmp;
+		for (count_genes = 0; count_genes<num_of_genes; count_genes++)
+		{
+			tmp2 = pop_mem[sj][count_genes];
+			pop_mem[sj][count_genes] = pop_mem[sj + gap][count_genes];
+			pop_mem[sj + gap][count_genes] = tmp2;
+		}
+
+	}
+
+
+} /* of program  */
+
