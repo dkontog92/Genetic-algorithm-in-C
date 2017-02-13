@@ -1,2 +1,2 @@
 # Genetic_algo_university
-Genetic algorithm for emotion classification
+Genetic algorithm for solving equations
