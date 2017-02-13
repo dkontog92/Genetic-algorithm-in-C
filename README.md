@@ -1,2 +1,2 @@
-# Genetic_algo_university
+# Genetic algorithm implementation in C
 Genetic algorithm for solving equations
