@@ -51,12 +51,8 @@ float calculate_fitness(int count_pop, double **pop_mem)
 
 	double fitness = 0;
 
-
-	// y = pow((1 - pop_mem[count_pop][0]), 2) + 100 * pow(pop_mem[count_pop][1] - pow(pop_mem[count_pop][0], 2), 2);             //Solution (1,1)
-	//y = pow(1.5 - x1 + x1 * x2, 2) + pow(2.25 - x1 + x1*pow(x2, 2), 2) + pow(2.625 - x1 + x1*pow(x2, 3), 2);					  //Solution (3,0.5)
 	y = pow(x1 + 2 * x2 - 7, 2) + pow(2 * x1 + x2 - 5, 2);														//Solution (1,3)
-	//y = 100 * sqrt(abs(x2 - 0.01*pow(x1, 2))) + 0.01*abs(x1 + 10);					//Solution (-10,1)
-
+	
 	fitness = fabs(y);
 
 	printf("\nFitness: %f\n", fitness);
